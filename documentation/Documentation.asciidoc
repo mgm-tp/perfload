@@ -1,0 +1,30 @@
+= perfLoad Documentation
+:toc: left
+:toclevels: 6
+:numbered:
+:imagesdir: images
+:homepage: http://www.perfload.org
+:sectlinks:
+:source-highlighter: coderay
+:last-update-label!:
+:docinfo:
+
+include::Home.asciidoc[]
+
+include::Getting-Started.asciidoc[]
+
+include::Features.asciidoc[]
+
+include::Components.asciidoc[]
+
+include::Installation.asciidoc[]
+
+include::Implementing-Load-Tests.asciidoc[]
+
+include::Analyzing-perfAlyzer-Reports.asciidoc[]
+
+include::Downloads.asciidoc[]
+
+include::Tips-and-Tricks-for-Load-Testing.asciidoc[]
+
+include::Community.asciidoc[]

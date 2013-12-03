@@ -1,0 +1,325 @@
+== Installation
+
+The various perfLoad components need to be installed on the participating hosts. All components must be installed under a common directory on each host, which will subsequently be referred to as +PERFLOAD_HOME+. An environment variable with this name is, however, not necessary.
+
+'''
+*_A Note up front_*
+
+* _Installing the components always involves unzipping a distribution. It is advisable to unzip the distributions directly on the target systems. This avoids file corruption during SCP transfer of unzipped distributions (e. g. \*.dll and \*.so file in perfMon) and creates execute permissions for shell scripts automatically._
+* _It is always safe to unzip a newer version over an existing installation. All files that require user changes have +.default+ in their names and must be renamed upon installation. So you can always diff your adapted config files with the default ones after an update and make necessary adjustments, if need be._
+
+'''
+
+
+=== Installing Daemons and Clients
+
+* Requires Java 7
+* Unzip the perfLoad Client distribution to +PERFLOAD_HOME+ on all client hosts.
+* Unzip the perfLoad Daemon distribution to +PERFLOAD_HOME+ on all client hosts.
+* +JAVA_HOME+ must be set to a **Java 7** (JDK or JRE). A +setenv.cmd+ / +setenv.sh+ may be added to the daemon directory in order to set +JAVA_HOME+. It will be picked up if present.
+
+=== Installing perfMon
+
+* Requires Java 6
+* Unzip the perfMon distribution to +PERFLOAD_HOME+ on all hosts where you wish to run perfMon during load tests.
+* +JAVA_HOME+ must be set to a **Java 6** or higher (JDK or JRE). A +setenv.cmd+ / +setenv.sh+ may be added to the daemon directory in order to set +JAVA_HOME+. It will be picked up if present.
+
+=== Installing the Console
+
+* Requires Java 7
+* Unzip the perfLoad Console distribution to +PERFLOAD_HOME+ on the controller host.
+* +JAVA_HOME+ must be set to a **Java 7** (JDK or JRE). A +setenv.cmd+ / +setenv.sh+ may be added to the daemon directory in order to set +JAVA_HOME+. It will be picked up if present.
+* Copy the driver jar and any additional dependencies to the folder +test-lib+.
+* Copy testplan files to the folder +testplans+.
+* Copy load profile events files to the folder +testplans/loadprofiles+.
+
+=== Installing the Agent
+
+* Requires Java 6
+* Unzip the perfLoad Agent distribution to +PERFLOAD_HOME+ on the application server hosts.
+* Rename +perfload-agent.default.json+ to +perfload-agent.json+ and edit it as specified below.
+
+For each method to be measured, add a JSON object to the file, the key being the fully classified class name of the class that contains methods to measure. Each class name JSON object must in turn contain any number of JSON objects for methods to measure, the keys being the method names and the values being lists of JSON arrays with method parameters. Specifying method parameters allows to distinguish between overloaded methods. If an empty list is specified, any, potentially overloaded, method with the name of the key is instrumented.
+
+The agent can also instrument entry points of Web applications, i. e. servlets or filter. This enables the agent to match client requests and server-side measurings because perfLoad sends custom HTTP headers which the agent can extract. If your application has multiple entry points (e. g. multiple filters that are chained), only the first entry point relevant for a request should be instrumented. It is suggested the entry points be always configured.
+
+**Sample for an agent config file**
+[source,javascript]
+----
+{
+    'entryPoints': {
+        'servlets': ['com.foo.web.FooServlet'],
+        'filters': ['com.foo.web.FooFilter']
+    },
+    'instrumentations': {
+        'com.foo.web.Foo': {
+            'doSomething': [[], ['int'], ['long', 'long']],
+            'doSomethingElse': []
+        },
+        'com.foo.web.Bar': {
+            'doIt': [[java.lang.Integer]],
+            'doItAgain': []
+        }
+    }
+}
+----
+
+In order to activate the agent in your application server, add the following VM-Parameter:
+
+[source,bash]
+----
+-javaagent:/path/to/agent/perfload-agent.jar
+----
+
+=== Installing the Supervisor
+
+* Requires Java 7
+* Unzip the perfLoad Supervisor distribution to +PERFLOAD_HOME+ on the controller host. Note, the Supervisor must be installed on the same host as the Console.
+* +JAVA_HOME+ must be set to a **Java 7** (JDK or JRE). A +setenv.cmd+ / +setenv.sh+ may be added to the daemon directory in order to set +JAVA_HOME+. It will be picked up if present.
+* Rename all files in directory +conf+ matching the pattern +*.default.*+ by removing ".default" from the file name.
+* Edit the config files in the folder +conf+ as described below.
+
+*Editing +SupervisorConfig.groovy+*
+
+The file +SupervisorConfig.groovy+ contains settings for the Supervisor that are not specific to load tests. The file is in a format that can be read by Groovy's [ConfigSlurper](http://groovy.codehaus.org/ConfigSlurper). The following table lists all properties for this file. Note that, unlike Java properties, the values are real types, not just strings.
+
+[cols="m,a,m" options="header"]
+|===
+| Property 
+| Description 
+| Type
+
+| loadProfileTestTimeout 
+| The timeout in minutes that the console will wait after the last test thread was started before aborting the test. Set to +0+ for no timeout. 
+| long
+
+| cleanupBeforeTest 
+| Specifies whether the Supervisor should perform a clean-up (e. g. delete old log files) before executing a load test. This should normally be set to +true+ 
+| boolean
+
+| startServersBeforeTest 
+| Specifies whether the Supervisor should start configured servers before executing a load test. 
+| boolean
+
+| shutdownServersAfterTest 
+| Specifies whether the Supervisor should shutdown configured servers after executing a load test. 
+| boolean
+
+| collectResults 
+| Specifies whether the Supervisor should collect test results after executing a load test. 
+| boolean
+
+| runProjectSpecificTargets 
+| Specifies whether the Supervisor should run project specific targets before and after a load test. 
+| boolean
+
+| createReport
+| Automatically runs perfAlyzer after the test 
+| boolean
+
+| requireTestComment
+| If +true+, the Supervisor prompts for a comment before a test is started. This comment will show up in the report. 
+| boolean
+|===
+
+
+*Editing +LoadTestConfig.groovy+*
+
+The file +LoadTestConfig.groovy+ contains configurations for all hosts participating in load tests. The file is in a format that can be read by Groovy's [ConfigSlurper](http://groovy.codehaus.org/ConfigSlurper). The following table lists the properties for this file. Note that, unlike Java properties, the values are real types, not just strings. As the configuration is structured as nested maps, the table also shows parent-child relationships.
+
+[cols="m,a,a,m" options="header"]
+|===
+| Property 
+| Parent 
+| Description 
+| Type
+
+
+| hostConfigs 
+|  
+| Root for host configurations. 
+| Map 
+
+| someHostNameOrIp 
+| hostConfigs 
+| A map representing a specific host configuration. 
+| Map 
+
+| user 
+| someHostNameOrIp 
+| The username for SSH access. 
+| String 
+
+| password 
+| someHostNameOrIp 
+| The password for SSH access (optional). 
+| String 
+
+| pemFile 
+| someHostNameOrIp 
+| The certificate for public key authentication (optional). 
+| String 
+
+| perfLoadHome 
+| someHostNameOrIp 
+| The base directory for all perfLoad components on this host. 
+| String 
+
+| osfamily 
+| someHostNameOrIp 
+| The OS family of this host. 
+| String 
+
+| daemonId 
+| someHostNameOrIp 
+| Optional parameter that be set if this is a client host that runs perfLoad daemons and client processes. Specifies the id of a daemon as configured in the load profile. 
+| int 
+
+| perfmon 
+| someHostNameOrIp 
+| Optional parameter that must be +true+ if perfMon is installed on this host, which should usually be the case on all participating hosts. 
+| boolean 
+
+| startup 
+| someHostNameOrIp 
+| A list of SSH commands that should be executed on this host before a load test, e. g. to start up application servers. 
+| List 
+
+| shutdown 
+| someHostNameOrIp 
+| A list of SSH commands that should be executed on this host after a load test, e. g. to shut down application servers. 
+| List 
+
+| archiving 
+| someHostNameOrIp 
+| A map of archiving configurations that specify what files perfLoad should zip up and collect after a load test. 
+| Map 
+
+| someArchivingConfigName 
+| archiving 
+| A map representing a specific archiving configuration. 
+| Map 
+
+| dir 
+| someArchivingConfigName 
+| The directory that contains files to be archived. 
+| String 
+
+| files 
+| someArchivingConfigName 
+| A wildcard pattern matching files to be archived. 
+| String 
+
+| zipName 
+| someArchivingConfigName 
+| The name of the zip file to create. 
+| String 
+
+| cleanup 
+| someArchivingConfigName 
+| Specifiey whether the files (including the zip file) should be deleted before a test if they exist. May be left out otherwise. 
+| boolean 
+
+|===
+
+
+The following example should make this clearer:
+
+*Example for LoadTestConfig.groovy*
+
+[source,groovy]
+----
+    hostConfigs {
+        myClientHost1 {
+            user = 'myuser'
+            password = 'mypass'
+            perfLoadHome = '/home/myuser/perfload'
+            osfamily = 'unix'
+            daemonId = 1
+            perfmon = true
+        }
+        myClientHost2 {
+            user = 'myuser'
+            password = 'mypass'
+            perfLoadHome = '/home/myuser/perfload'
+            osfamily = 'unix'
+            daemonId = 2
+            perfmon = true
+        }
+        myAppServerHost1 {
+            user = 'myuser'
+            password = 'mypass'
+            perfLoadHome = '/home/myuser/perfload'
+            osfamily = 'unix'
+            perfmon = true
+            startup = [[dir: '/dir/to/appserver/bin', executable: './myapp.sh'], args: ['start']]
+            shutdown = [[dir: '/dir/to/appserver/bin', executable: './myapp.sh', args: ['shutdown']]
+            archiving {
+                appServerLogs {
+                    dir = '/dir/to/appserver/logs'
+                    files = '*.log'
+                    zipName = 'appserver-logs.zip'
+                    cleanup = true
+                }
+            }
+        }
+        myAppServerHost2 {
+            user = 'myuser'
+            password = 'mypass'
+            perfLoadHome = '/home/myuser/perfload'
+            osfamily = 'unix'
+            perfmon = true
+            startup = [[dir: '/dir/to/appserver/bin', executable: './startup.sh']]
+            shutdown = [[dir: '/dir/to/appserver/bin', executable: './shutdown.sh']]
+            archiving {
+                appServerLogs {
+                    dir = '/dir/to/appserver/logs'
+                    files = '*.log'
+                    zipName = 'appserver-logs.zip'
+                    cleanup = true
+                }
+            }
+        }
+        myDbHost {
+            user = 'myuser'
+            password = 'mypass'
+            perfLoadHome = '/home/myuser/perfload'
+            osfamily = 'unix'
+            perfmon = true
+        }
+    }
+----
+
+*Adding project-specific targets*
+
+The Supervisor can execute project-specific tasks before and after a load test. The file +ProjectTargets.gradle+ must be placed in the Supervisor's installation directory. It must contain the tasks +before+, +after+, and +performSystemCheck+. The latter one can be used to check the availability of the system, e. g. by calling a URL.
+
+[source,groovy]
+----
+// custom config object, if necessary
+// myProjectConfig = SupervisorUtils.loadConfig(tenant, 'ProjectTasksconfig.groovy')
+
+task before(description: 'Executes project-specific tasks before the load test') << {
+
+}
+
+task after(description: 'Executes project-specific tasks after the load test') << {
+
+}
+
+task performSystemCheck(description: 'Checks that everything is up and running') << {
+    /*
+     * In order to fail this task, e. g. ant.fail() may be called
+     */
+}
+----
+
+
+NOTE: An upcoming version of the Supervisor will be able to distribute all components to the participating hosts so that everything can be configured in one central place and then be installed automatically.
+
+=== Installing the Load Profile Editor
+
+* Requires Java 7
+* Unzip the perfLoad Load Profile Editor distribution to +PERFLOAD_HOME+ on the controller host.
+* +JAVA_HOME+ must be set to a **Java 7** (JDK or JRE). A +setenv.cmd+ / +setenv.sh+ may be added to the daemon directory in order to set +JAVA_HOME+. It will be picked up if present.
+

@@ -1,0 +1,51 @@
+image:perfLoad_Logo_wort2.png[perfLoad Logo, title="perfLoad Logo"]
+
+== Overview
+
+perfLoad offers powerful whitebox testing features to analyze not only
+client-side response times but also allows the user to capture
+server-side execution times and to monitor system metrics on all
+participating hosts. In addition, it provides the complete picture as an
+easy to read HTML report containing a sophisticated visual analysis of
+the measurings.
+
+image:perfLoad_overview_800x600.png[perfLoad Overview, title="perfLoad Overview"]
+
+[discrete]
+=== Main Features
+
+* Whitebox load and performance testing including client- and server-side measurings and system metrics
+* Support for complex load profiles including a visual editor
+* Full HTTP support
+* Support for custom request types
+* Load test driver development in Java
+* Central control
+* Full-featured reporting
+* <<_features,More...>>
+
+[discrete]
+=== Getting Started
+
+For a quick start, a complete <<_getting_started_2,demo setup>> is
+available which installs all perfLoad components and a reference
+application on your local machine. This should get you started quickly
+in a matter of minutes and help you set up real-world testing scenarios
+for your applications.
+
+[discrete]
+=== Read on...
+
+* <<_getting_started_2,Getting Started>> - Get up and running quickly using the demo setup.
+* <<_features,Complete Feature List>> - Find out all about perfLoad's amazing features.
+* <<_components,Components>> - Get to know perfLoad's components.
+* <<_installation,Installation>> - Learn how to set up and configure everything for real-world scenarios.
+* <<_implementing_load_tests,Implementing Load Tests>>
+** <<_developing_a_load_test_driver,Developing a Load Test Driver>>
+** <<_creating_a_load_profile,Creating a Load Profile>>
+** <<_creating_a_testplan,Creating a Testplan>>
+** <<_a_complete_example,A Complete Example>>
+* <<_analyzing_perfalyzer_reports,Analyzing perfAlyzer Reports>> - Learn about reporting features and how to interpret reports.
+* <<_downloads,Downloads>>
+* <<_tips_and_tricks_for_load_testing,Tips and Tricks for Load Testing>>
+* <<_community,Community>> - Need help? Want to get involved?
+

@@ -1,0 +1,171 @@
+=== A Complete Example
+
+This page describes a simple example scenario that tests a returns Fibonacci servlet.
+
+==== The Driver Code
+
+*The Guice Module*
+[source,java]
+----
+package com.mgmtp.perfload.example.driver;
+
+import static com.google.common.collect.Maps.newHashMapWithExpectedSize;
+import static org.apache.commons.io.IOUtils.lineIterator;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
+
+import org.apache.commons.io.LineIterator;
+
+import com.google.inject.Provides;
+import com.mgmtp.perfload.core.client.web.config.AbstractWebLtModule;
+import com.mgmtp.perfload.core.client.web.config.WebLtModule;
+import com.mgmtp.perfload.core.common.util.PropertiesMap;
+
+public class ExampleModule extends AbstractWebLtModule {
+
+    public ExampleModule(final PropertiesMap testplanProperties) {
+        super(testplanProperties);
+    }
+
+    @Override
+    protected void doConfigureWebModule() {
+        bindRequestFlowEventListener().to(ExampleListener.class);
+        install(new WebLtModule(testplanProperties));
+    }
+
+    @TestData
+    @Provides
+    Map<String, String> provideTestData() {
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        try (InputStream is = cl.getResourceAsStream("testdata/fibonacci.txt")) {
+            Map<String, String> result = newHashMapWithExpectedSize(20);
+            for (LineIterator it = lineIterator(is, "UTF-8"); it.hasNext();) {
+                String line = it.nextLine();
+                if (line.startsWith("#")) {
+                    continue;
+                }
+                String[] columns = line.split(";");
+                result.put(columns[0], columns[1]);
+            }
+            return result;
+        } catch (IOException ex) {
+            throw new IllegalStateException("Error reading test data.", ex);
+        }
+    }
+}
+----
+
+The module installs +import com.mgmtp.perfload.core.web.config.WebLtModule+ as usual. Plus, it binds a map of test data that is initialized in a provider method and a listener that uses the map in order to select an entry for the current test thread. In this case, the test data is read from a simple text file. In a real-world scenario, a database could be used instead.
+
+*Qualifying Annotation for the Test Data Map*
+[source,java]
+----
+package com.mgmtp.perfload.example.driver;
+
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import javax.inject.Qualifier;
+
+@Retention(RUNTIME)
+@Target({ FIELD, PARAMETER, METHOD })
+@Qualifier
+public @interface TestData {
+    //
+}
+----
+
+The annotation +TestData+ is used in order to further qualify the map. This is necessary if different maps of type +Map<String, String>+ are bound. The annotation must itself be annotated with +@Qualifier+.
+
+*Listener for Loading Test Data*
+[source,java]
+----
+package com.mgmtp.perfload.example.driver;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Random;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
+import net.jcip.annotations.Immutable;
+import net.jcip.annotations.ThreadSafe;
+
+import com.google.common.collect.ImmutableList;
+import com.mgmtp.perfload.core.client.util.PlaceholderContainer;
+import com.mgmtp.perfload.core.client.web.event.LtListenerAdapter;
+import com.mgmtp.perfload.core.client.web.event.RequestFlowEvent;
+
+@Singleton
+public class ExampleListener extends LtListenerAdapter {
+    private final Provider<PlaceholderContainer> placeholderContainerProvider;
+    private final List<Entry<String, String>> testDataEntries;
+    private final Random random = new Random();
+
+    @Inject
+    public ExampleListener(final Provider<PlaceholderContainer> placeholderContainerProvider,
+            @TestData final Map<String, String> testData) {
+        this.placeholderContainerProvider = placeholderContainerProvider;
+        this.testDataEntries = ImmutableList.copyOf(testData.entrySet());
+    }
+
+    @Override
+    public void beforeRequest(final RequestFlowEvent event) {
+        int index = random.nextInt(testDataEntries.size());
+        Entry<String, String> entry = testDataEntries.get(index);
+
+        PlaceholderContainer placeholderContainer = placeholderContainerProvider.get();
+        placeholderContainer.put("n", entry.getKey());
+        placeholderContainer.put("fibn", entry.getValue());
+    }
+}
+----
+
+The +ExampleListener+ only implements the method +beforeRequest+. It randomly selects a test data entry and adds replacement values for the placeholder tokens +n+ and +fibn+ to the +PlaceholderContainer+. The class +ExampleListener+ is bound as a +Singleton+ and is annotated accordingly. The +PlaceholderContainer+ is bound by perfLoad and has +ThreadScope+. Thus, it should not be injected directly, but a +Provider<PlaceholderContainer>+ should be injected instead. Otherwise, its scope would effectively be widened to that of a +Singleton+. JSR 330 allows it to inject a provider instead of a direct instance making it possible to always get a correctly scoped object.
+
+==== The Request Flow
+
+*Request Flow with two Requests*
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<requestFlow xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+        xs:noNamespaceSchemaLocation="http://mgm-tp.github.io/perfload/schema/1.0/perfload-request-flow.xsd">
+    <request type="GET" uri="/fibonacci">
+        <param name="n">${n}</param>
+        <detailExtraction name="fibn" >(${fibn})</detailExtraction>
+    </request>
+    <request type="POST" uri="/fibonacci">
+        <param name="n">${n}</param>
+        <detailExtraction name="fibn">(${fibn})</detailExtraction>
+    </request>
+</requestFlow>
+----
+
+This is a simple request flow that contains a GET and a POST request to the servlet. Upon execution, the placeholders are replaced. The servlet is supposed to return the +n^th^ Fibonacci number as plain text. The expected result is then extracted from the response. Of course, this is a somewhat contrived example. In a real-world scenario, one would e. g. extract some id from the response that must be added as a parameter to the following request.
+
+==== The Testplan
+
+*Fibonacci Testplan*
+[source,xml]
+----
+<?xml version="1.0" encoding="utf-8"?>
+<testplan xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" 
+        xs:noNamespaceSchemaLocation="http://mgm-tp.github.io/perfload/schema/1.0/perfload-testplan.xsd">
+    <module>com.mgmtp.perfload.core.test.client.TestClientModule</module>
+    <loadProfile>fibonacci.perfload</loadProfile>
+    <testJars>
+        <testJar>driver-example-1.0.0.jar"</testJar>
+    </testJars>
+</testplan>
+----

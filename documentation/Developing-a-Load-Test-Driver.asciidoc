@@ -1,0 +1,568 @@
+=== Developing a Load Test Driver
+
+A load test driver is the piece of software that is executed during a load test. It acts as a client to the system under test. It is basically just a jar file (or multiple jar files if further dependencies are needed). For simple tests, the jar needs to contain at least a properties file and a request flow file. For more advanced tests, custom Java classes will be required.
+
+Initially, we'll focus on Web load tests using +com.mgmtp.perfload.core.client.web.WebLtDriver+ as driver implementation. Later on, we'll look at calling scripts using +com.mgmtp.perfload.core.client.driver.ScriptLtDriver+ and, finally, at implementing custom drivers.
+
+==== Project Setup
+
+For Maven users, add the following dependency to your driver project:
+
+[source,xml]
+----
+<dependency>
+  <groupId>com.mgmtp.perfload</groupId>
+  <artifactId>perfload-client</artifactId>
+  <version>insert current version</version>
+</dependency>
+
+<!-- Contains DriverTestRunner. Only needed during development. -->
+<dependency>
+  <groupId>com.mgmtp.perfload</groupId>
+  <artifactId>perfload-test-utils</artifactId>
+  <version>insert current version</version>
+  <scope>test</scope>
+</dependency>
+----
+
+The following screenshot shows an example for a driver project in Eclipse:
+
+image:project_structure.png
+
+The following table quickly explains the files on the screenshot:
+
+[cols="m,a" options="header"]
+|===
+| Class 
+| Description 
+
+| ExampleModule     
+| Guice module for the driver. Needs to be specified in the testplan 
+
+| ExampleListener 
+| Listener implementation for hooking into the request flow execution 
+
+| example_request_flow.xml 
+| Contains the request flow 
+
+| testdata.txt 
+| CSV file containing test data 
+
+| perfload.utf8.props 
+| Properties file 
+
+| DriverTest 
+| Test class for debugging and testing the driver. 
+
+|===
+
+
+A load test driver can be easily debugged and tested in an IDE using +com.mgmtp.perfload.test.utils.DriverTestRunner+. This class provides a static method that executes the driver once directly in the IDE without the need for the whole perfLoad framework.
+
+[source,jav]
+----
+DriverTestRunner.runDriver(new ExampleModule(new PropertiesMap()), "myOperation", "myTarget");
+----
+
+==== Properties
+
+The properties file +perfload.utf8.props+ must be present in the classpath root of the driver jar. The file must have the extension +.utf8.props+ which indicates that the file, unlike the old standard Java properties files, must be UTF-8-encoded. Java 6 added support for properties in UTF-8 format. The file extension is changed becaused Eclipse will by default always try to encode properties files in Latin-1 adding unicode escapes for non-Latin-1 characters. Internally, perfLoad uses the class +com.mgmtp.perfload.core.common.util.PropertiesMap+ to handle properties.
+
+The whole test execution in perfLoad is based on +operations+ and +targets+. An +operation+ defines what is to be executed, e. g. which request flow (see next section) for Web load test, and a +target+ defines against which system (there may be multiple application servers) the +operation+ is executed. The following example shows how +operations+ and +targets+ for a browsing and a checkout scenario of an online shop could be configured.
+
+*Properties Example*
+[source,properties]
+----
+# two request flow for operation'browsing'; multiple comma-separated request flows may
+# be specified, which are executed sequentially
+operation.browsing.requestflows=requestflows/browsing1.xml,requestflows/browsing2.xml
+# request flow for operation 'checkout'
+operation.checkout.requestflows=requestflows/checkout.xml
+
+# two target configurations, 'appserver01' and 'appserver02'
+target.appserver01.host=http://myshop01.mgm-tp.com
+target.appserver02.host=http://myshop02.mgm-tp.com
+
+# custom properties may be added
+my.custom.property=foo
+----
+
+==== Request Flows
+
+During a Web load test, perfLoad executes a number of pre-defined parameterizable HTTP requests that make up a so-called request flow. Multiple request flows may be specified for an +operation+ which are then executed sequentially. The following XML file shows how a request flow is configured. Parameter values may be wrapped into CDATA blocks if necessary. Different request types are shown exemplarily.
+
+*Request Flow Example*
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<requestFlow>
+  <request type="GET" uri="/home" />
+
+  <request type="POST" uri="/login">
+    <param name="username">${username}</param>
+    <!-- use CDATA blocks if necessary -->
+    <param name="password"><![CDATA[${password}]]></param>
+  </request>
+
+  <request type="PUT" uri="/test">
+    <body><![CDATA[some body content, might be XML or JSON]]></body>
+  </request>
+
+  <request type="POST" uri="/test/42">
+    <body resourcePath="body.txt" resourceType="text" />
+  </request>
+
+  <!--
+    Uses a uri alias so requests are grouped under this alias
+    in the reponse time distribution report.
+  -->
+  <request type="POST" uri="/image/${id}" uriAlias="Image Upload">
+    <header name="Content-Type">image/png</header>
+    <body resourcePath="logo.png" resourceType="binary" />
+  </request>
+
+  <!--
+    Note the use of '&amp;' in the URL. otherwise XML validation would fail.
+    The value of the first parameter and the name of the second parameter are parameterized.
+  -->
+  <request type="GET" uri="/foo?param1=${value1}&amp;${param2}=value2" />
+
+  <!-- same as the above, for GET request, the query string is created automatically -->
+  <request type="GET" uri="/foo">
+    <param name="param1">${value1}</param>
+    <param name="${param2}">value2</param>
+  </request>
+
+  <!-- Requests may be skipped. In this case, the skip parameter is itself parameterized -->
+  <request type="GET" uri="/bar" skip="${skip}" />
+
+  <request type="GET" uri="/rest">
+    <!-- add custom header -->
+    <header name="Content-Type">application/xml</header>
+  </request>
+</requestFlow>
+----
+
+===== Parameterization of Requests
+
+The example above contains placeholder tokens in many places. In fact, any element atribute or content in the XML file is parameterizable. perfLoad uses Ant-style placeholder tokens, such as +${username}+. Internally, perfLoad holds placeholders and their replacement values in a +com.mgmtp.perfload.core.client.util.PlaceholderContainer+ which is confined to the current thread. Replacement values may either be extracted from responses (see next section) or added to the +com.mgmtp.perfload.core.client.util.PlaceholderContainer+ programmatically. The latter can be done using an event listener (see the section on events below), e. g. using test data that come from e. g. a database or CSV files. At runtime, placeholder tokens are resolved just before executing a request.
+
+===== Extracting Details from Responses
+
+====== Response Body Extraction
+
+Details may be extracted from HTTP responses in order to be stored in the +com.mgmtp.perfload.core.client.util.PlaceholderContainer+.
+
+*Detail Extraction Example*
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<requestFlow>
+  <request type="GET" uri="/home">
+    <!-- extract value for placeholder 'foo' from response -->
+    <detailExtraction name="foo">
+      <![CDATA[foo=([^"]+)"]]>
+    </detailExtraction>
+    <!-- extract value for placeholder 'bar' from response -->
+    <detailExtraction name="bar">
+      <![CDATA[name="bar"\s+value="([^"]+)"]]>
+    </detailExtraction>
+  </request>
+
+  <request type="POST" uri="/next">
+    <!-- use extracted placeholder values in next request -->
+    <param name="foo">${foo}</param>
+    <param name="bar">${bar}</param>
+  </request>
+</requestFlow>
+----
+
+The +detailExtraction+ element must have a regular expression pattern as text content that identifies what to extract. It may be wrapped into a CDATA block. The regular expression is applied against the response body using +java.util.regex.Matcher.find()+. The element can have the following attributes:
+
+[cols="m,a,a" options="header"]
+|===
+| Attribute 
+| Description 
+| Required 
+
+| name 
+| The key under which the extracted value is stored in the +PlaceholderContainer+. 
+| yes 
+
+| groupIndex 
+| The value is always extracted from a capturing group. This attribute identifies the index of the group. Defaults to +1+. 
+| no 
+
+| failIfNotFound 
+| If +true+, a +com.mgmtp.perfload.core.web.response.PatternNotFoundException+ is thrown if no subsequence matching the regular expression pattern is found in the response body and no +defaultValue+ is defined. Defaults to +true+. 
+| no 
+
+| defaultValue 
+| Default value to use if no subsequence matching the regular expression pattern is found in the response body. 
+| no 
+
+| indexed 
+| By default, the result of the first match is extracted. If +indexed+ is +true+, all matches are extracted and stored as +<name>#<matchIndex>+ in the +PlaceholderContainer+. Defaults to +false+. 
+| no 
+
+|===
+
+====== Response Header Extraction
+
+Response header may be extracted and store in the +PlaceholderContainer+ as well. By default, the name of the headser is used as the placeholder name. An alternative placeholder name my optionally be specified. See example below.
+
+*Header Extraction Example*
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<requestFlow>
+  <request type="GET" uri="/home">
+    <headerExtraction name="myFirstHeader" />
+    <headerExtraction name="mySecondHeader" placeholderName="myPlaceholder" />
+  </request>
+</requestFlow>
+----
+
+==== Validating Responses
+
+A +com.mgmtp.perfload.core.web.response.ResponseValidator+ is responsible for validating and parsing HTTP responses. The default implementation is the class +com.mgmtp.perfload.core.web.response.DefaultResponseParser+. It checks for allowed or forbidden HTTP status codes and error patterns, and can extract details from the response as described above. The +com.mgmtp.perfload.core.web.response.DefaultResponseParser+ can be configured with properties. If a response is considered invalid, an +com.mgmtp.perfload.core.web.response.InvalidResponseException+ is thrown, which causes the execution of the current request flow to be aborted (not the whole test, though!).
+
+===== Checking HTTP Status Codes
+
+Optionally, comma-separated lists of allowed or forbidden HTTP status code may be configured. Allowed and forbidden status codes must be mutually exclusive. Usually, it only makes sense to specify either allowed or forbidden status code, not both.
+
+*Example for the Configuration of Allowed and Forbidden HTTP Status Codes*
+
+[source,properties]
+----
+responseParser.allowedStatusCodes=200
+responseParser.forbiddenStatusCodes=404,500
+----
+
+===== Checking the Response Body
+
+Optionally, regular expression patterns may be configured marking a response invalid if a subsequence matching one of the patterns is found in the response body. Multiple pattern may be specified. They must be indexed starting at one.
+
+*Exaample for the Configuration of Error Patterns*
+
+[source,properties]
+----
+# check for specific marker the app adds in case of an error
+responseParser.errorPattern.1=<!--loadtest stop -->
+# make sure the page is complete
+responseParser.errorPattern.2=(?is)^((?!</html>).)*$
+----
+
+The first one checks for the error marker `<!--loadtest stop -->` which is written to the response whenever an error occurs (e. g. a validation error due to invalid user input). The seconds one checks that the body contains a closing HTML tag making sure the complete response page was returned.
+
+==== Test Modules
+
+perfLoad supports http://jcp.org/aboutJava/communityprocess/final/jsr330/index.html[JSR 330] dependency injection, which driver implementers may take full advantage of. The wiring for JSR 330 is done using http://code.google.com/p/google-guice/[Google Guice]. A load test driver needs a Guice module which must be specified in the testplan (see [Creating a Testplan](Creating a Testplan)). perfLoad already comes with a pre-configured module for Web load tests +com.mgmtp.perfload.core.web.config.WebLtModule+ which is sufficient for simple tests that are not parameterized with special test data. For more flexibility, a custom Guice module is required.
+
+Custom Guice modules must inherit from +com.mgmtp.perfload.core.client.config.AbstractLtModule+. For Web tests, +com.mgmtp.perfload.core.weg.config.AbstractWebLtModule+ should be subclassed. Custom modules for Web load tests must install +com.mgmtp.perfload.core.web.config.WebLtModule+ and provide additional bindings as needed.
+
+*Module Example*
+
+[source,java]
+----
+public class ExampleModule extends AbstractLtModule {
+    public ExampleModule(final PropertiesMap testplanProperties) {
+        super(testplanProperties);
+    }
+
+    @Override
+    protected void doConfigure() {
+        // Custom bindings
+    }
+}
+----
+
+*Module Example for Web Tests*
+
+[source,java]
+----
+public class ExampleWebModule extends AbstractWebLtModule {
+    public ExampleWebModule(final PropertiesMap testplanProperties) {
+        super(testplanProperties);
+    }
+
+    @Override
+    protected void doConfigureWebModule() {
+       install(new WebLtModule(testplanProperties));
+
+       // Custom bindings
+    }
+}
+----
+
+==== Scoping
+
+http://jcp.org/aboutJava/communityprocess/final/jsr330/index.html[JSR 330] provides a singleton scope, and, by default, objects are unscoped in Guice, i. e. new instances are created as requested. In addition to that, perfLoad implements a +com.mgmtp.perfload.core.client.config.scope.ThreadScope+. This allows it to confine objects to threads, i. e. to each execution of a +operation+/+target+ combination. The +com.mgmtp.perfload.core.client.config.scope.ThreadScope+ is cleaned up automatically after a test thread is done, so a thread's state is cleared which is necessary because threads are pooled and may be reused. The annotation +com.mgmtp.perfload.core.client.config.annotations.ThreadScoped+ can be used to mark classes that should have thread scope.
+
+==== Events
+
+perfLoad triggers a number of events which driver implementers may react on, e. g. in order to load test data for parameterized tests. The following event listener interfaces can be implemented:
+
+* +com.mgmtp.perfload.core.client.event.LtProcessEventListener+
+* +com.mgmtp.perfload.core.client.event.LtRunnerEventListener+
+* +com.mgmtp.perfload.core.web.event.RequestFlowEventListener+
+
+Listeners may be registered as follows in the Guice module and are thus themselves subject to JSR 330 injection. For convenience, the class +com.mgmtp.perfload.core.client.web.event.LtListenerAdapter+ is available which provides a dummy implementation of all three listener interfaces. Note that it is possible that listeners can be scoped. It is e. g. possible to make a listener thread-scoped, i. e. each driver execution gets its own listener confined to the current thread.
+
+*Registering Event Listeners*
+
+[source,java]
+----
+public class ExampleWebModule extends AbstractWebLtModule {
+    public ExampleWebModule(final PropertiesMap testplanProperties) {
+        super(testplanProperties);
+    }
+
+    @Override
+    protected void doConfigureWebModule() {
+        install(new WebLtModule(testplanProperties));
+
+        bindLtProcessEventListener().to(MyListener.class);
+        bindLtRunnerEventListener().to(MyListener.class);
+        bindRequestFlowEventListener().to(MyListener.class);
+    }
+}
+----
+
+==== Waiting Times
+
+It is possible to configure waiting times at the following execution points during a test run:
+
+* Before the the start of each driver execution
+* Before each request (_applies to Web load tests only_)
+
+The waiting time before each request is calculated using a +com.mgmtp.perfload.core.client.util.WaitingTimeStrategy+. The following implementations are available:
+
+* +com.mgmtp.perfload.core.client.util.ConstantWaitingTimeStrategy+
+* +com.mgmtp.perfload.core.client.util.EqualDistWaitingTimeStrategy+
+* +com.mgmtp.perfload.core.client.util.BetaDistWaitingTimeStrategy+
+
+The default implementation used is +com.mgmtp.perfload.core.client.util.ConstantWaitingTimeStrategy+. It may be overridden in the test's Guice module:
+
+*Setting a WaitingTimeStrategy*
+
+[source,java]
+----
+public class ExampleModule extends AbstractLtModule {
+    public ExampleModule(final PropertiesMap testplanProperties) {
+        super(testplanProperties);
+    }
+
+    @Override
+    protected void doConfigure() {
+        bind(WaitingTimeStrategy.class).to(EqualDistWaitingTimeStrategy.class);
+    }
+}
+----
+
+Waiting times are configurable using the following properties.
+
+[cols="m,a,a" options="header"]
+|===
+| Property 
+| Description 
+| Default 
+
+| wtm.beforeTestStartMillis 
+| The random time between 0 and this value each test thread waits before it executes the driver logic. This is useful for static tests only and guarantees for a certain ramp-up time. 
+| 0 
+
+| wtm.strategy.constant.waitingTimeMillis 
+| Constant waiting time before each request. 
+| 0 
+
+| wtm.strategy.equaldist.intervalMinMillis 
+| Applies to +EqualDistWaitingTimeStrategy+ only. 
+| none 
+
+| wtm.strategy.equaldist.intervalMaxMillis 
+| Applies to +EqualDistWaitingTimeStrategy+ only. 
+| none 
+
+| wtm.strategy.betadist.intervalMinMillis 
+| Applies to +BetaDistWaitingTimeStrategy+ only. 
+| none 
+
+| wtm.strategy.betadist.intervalMaxMillis 
+| Applies to +BetaDistWaitingTimeStrategy+ only. 
+| none 
+|
+
+| wtm.strategy.betadist.betaDistParamA 
+| Applies to +BetaDistWaitingTimeStrategy+ only. 
+| none 
+
+| wtm.strategy.betadist.betaDistParamB 
+| Applies to +BetaDistWaitingTimeStrategy+ only. 
+| none 
+
+|===
+
+
+The default waiting time is 500 ms between requests. In most cases, the defaults are just fine.
+
+==== Custom Request Handlers
+
+Out of the box, perfLoad supports all HTTP request types. For certain purposes it might be necessary to implement a custom request handler, e. g. for making calls into Applet code. The following code snippets show how a request handler is registered and configured in a request flow. In this case, the +AppletRequestHandler+ uses reflection to call a method identified by the +uri+ of the request.
+
+*Registering a Custom Request Handler*
+
+[source,java]
+----
+public class ExampleWebModule extends AbstractWebLtModule {
+    public ExampleWebModule(final PropertiesMap testplanProperties) {
+        super(testplanProperties);
+    }
+
+    @Override
+    protected void doConfigureWebModule() {
+        install(new WebLtModule(testplanProperties));
+
+        bindRequestHandler("APPLET").to(AppletRequestHandler.class);
+    }
+}
+----
+
+*Example for a Request Flow with a Custom Request Handler*
+
+[source,java]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<requestFlow>
+  <request type="GET" uri="/home" />
+  <request type="APPLET" uri="myAppletUri" />
+</requestFlow>
+----
+
+If necessary (should not really be the case!), it is possible to override perfLoad's built-in request handlers using Guice' module overrides.
+
+
+*Example for Overriding the Request Handler for GET requests*
+
+[source,java]
+----
+public class ExampleWebModule extends AbstractWebLtModule {
+    public ExampleWebModule(final PropertiesMap testplanProperties) {
+        super(testplanProperties);
+    }
+
+    @Override
+    protected void doConfigureWebModule() {
+        // Install WebLtModule overriding the handler for GET requests.
+        Module module = Modules.override(new WebLtModule(testplanProperties))
+            .with(new AbstractWebLtModule(testplanProperties) {
+                @Override
+                protected void doConfigureWebModule() {
+                    bindRequestHandler("GET").to(MyCustomGetRequestHandler.class);
+                }
+            });
+        install(module);
+    }
+}
+----
+
+==== Using the Script Driver
+
+In order to create real-world scenarios, it can be interesting to call scripts that trigger some action during a load test. perfLoad has +com.mgmtp.perfload.core.client.driver.ScriptLtDriver+ for this use case. In order to use the script driver, it must be configured in +perfload.utf8.props+, which is shown in the following table.
+
+[cols="m,a,a" options="header"]
+|===
+| Property 
+| Description 
+| Required 
+
+| operation.<operation>.procInfo.dir
+| The working directory for the new process. If not specified, the current directory is used. 
+| no 
+
+| operation.<operation>.procInfo.freshEnvironment
+| Specifies whether the new process should get a fresh environment. Defaults to +false+. 
+| no 
+
+| operation.<operation>.procInfo.envVars.<envVar>
+| Specifies an environment variable for the new process. 
+| no 
+
+| operation.<operation>.procInfo.commands.<index>
+| Commands to start the process, indexed starting at 1. The list of commands is passed to +java.lang.ProcessBuilder+ when launching the process. 
+| yes 
+
+| operation.<operation>.procInfo.redirectProcessOutput
+| Specified whether the process' output should be redirected to the log of the client process. Defaults to +false+. 
+| no 
+
+| operation.<operation>.procInfo.logPrefix
+| Prefix to use for the process's log when log is redirected. 
+| no 
+
+| operation.<operation>.procInfo.waitFor
+| Specifies whether termination of the process should be awaited. Defaults to +true+. 
+| no 
+
+|===
+
+
+*Configuration Example*
+
+[source,properties]
+----
+ # the working directory for the new process
+ operation.myOperation.procInfo.dir=/home/foo/bar
+
+ # should the process inherit the environment or get a fresh one?
+ operation.myOperation.procInfo.freshEnvironment=true
+
+ # environment variable for the new process
+ operation.myOperation.procInfo.envVars.APP_OPTS=-Dfoo=bar
+ operation.myOperation.procInfo.envVars.MY_ENV_VAR=baz
+
+ # commands for the new process (starting at 1)
+ operation.myOperation.procInfo.commands.1=/bin/sh -c ./my_script.sh
+ operation.myOperation.procInfo.commands.2=-param1
+ operation.myOperation.procInfo.commands.3=-param2=42
+
+ # should the process' output be redirected to perfLoad's client log?
+ operation.myOperation.procInfo.redirectProcessOutput=true
+
+ # optional prefix to be used for the process's log when log is redirected
+ operation.myOperation.procInfo.logPrefix=myProc>
+----
+
+perfLoad automatically selects the +ScriptLtDriver+ if the properties contain keys starting with +operation.<operation>.procInfo+.
+
+==== Creating a Custom Driver
+
+Custom load test drivers must implement the interface +com.mgmtp.perfload.core.client.driver.LtDriver+.
+
+[source,java]
+----
+public class MyCustomDriver implements LtDriver {
+
+    public void execute() throws Exception {
+        // custom driver logic goes here
+    }
+}
+----
+
+The driver must be registered in a Guice module under its own key. A +com.mgmtp.perfload.core.client.config.DriverSelectionPredicate+ must be implemented that decides, based on the current operation and properties, if the driver is selected. When ever perfLoad executes an +operation+, it iterates over the selection predicates of registered drivers. The first match is selected. The iteration order is non-deterministic. The selection criteria should thus be distinct.
+
+[source,java]
+----
+DriverSelectionPredicate selectionPredicate = new DriverSelectionPredicate() {
+    @Override
+    public boolean apply(final String operation, final PropertiesMap properties) {
+        // return true, if the driver is to be used
+        // for the specified operation and properties
+        return properties.containsKey("operation." + operation + ".myCustomDriver");
+    }
+}
+bindLtDriver("myCustomDriver").forPredicate(selectionPredicate).to(MyCustomDriver.class);
+----
+

@@ -1,0 +1,111 @@
+=== Creating a Testplan
+
+A testplan is a small XML file that puts together all the pieces necessary for performing a load test. As we have learned, we need a load test driver and a load profile. The testplan is the glue between the driver and the load profile. Multiple testplans may be created in order to run the same driver with different load profiles.
+
+*Testplan Example*
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<testplan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://mgm-tp.github.io/perfload/schema/1.0/perfload-testplan.xsd">
+    <module>com.mgmtp.perfload.example.driver.ExampleModule<module>
+    <loadProfile>example.perfload</loadProfile>
+    <testJars>
+        <testJar>driver-example-1.0.0-SNAPSHOT.jar</testJar>
+    </testJars>
+    <!-- optional properties -->
+    <properties>
+        <property name="prop1">value1</property>
+        <property name="prop2">value2</property>
+    </properties>
+    <!-- optional JVM args for the client process -->
+    <jvmargs>
+        <jvmarg>-Dsysprop1=value1</jvmarg>
+        <jvmarg>-Dsysprop2=value2</jvmarg>
+    </jvmargs>
+</testplan>
+----
+
+*Testplan Reference*
+
+[cols="m,m,a,a", options="header"]
+|===
+| Element 
+| Parent Element 
+| Description 
+| Required 
+
+| testplan 
+| - 
+| Root element. 
+| yes
+
+| module 
+| testplan 
+| The fully qualified class name of the Guice module that configures the test. 
+| yes
+
+| loadProfile 
+| testplan 
+| The path to the load profile events file. The file is search in subdirectory `loadprofiles`. 
+| yes
+
+| testJars 
+| testplan 
+| Lists jar files the driver needs in addition to those the perfLoad client provides anyways. 
+| yes
+
+| testJar 
+| testJars 
+| A jar file the driver needs. Jar files are search relative to the console's subdirectory `test-lib`. 
+| At lease one.
+
+| properties 
+| testplan 
+| Container element for properties. 
+| no
+
+| property 
+| properties 
+| A property specific to the testplan. The value of the property must be specified as this element's content. Testplan properties are merged with those in `perfload.utf8.props` while those in the testplan file override already exinsting properties. Thus, it is possible to override properties for specific tests only. 
+| no
+
+| vmargs 
+| testplan 
+| Container element for additional JVM args for the client process. 
+| no
+
+| vmarg 
+| vmargs 
+| A JVM argument for the client process. 
+| no
+
+|===
+
+
+*Using XInclude in Testplans*
+
+XInclude is supported in testplan file, i. e. it is possible to extract test jars to a separate file. It is very common to have many testplans using the same driver. Thus, a separate file reduces redundancy and eases maintainance. Note the usage of the XInclude namespace.
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<testplan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"	
+        xmlns:xi="http://www.w3.org/2001/XInclude" 
+        xsi:noNamespaceSchemaLocation="http://mgm-tp.github.io/perfload/schema/1.0/perfload-testplan.xsd">
+    <module>com.mgmtp.perfload.example.driver.ExampleModule<module>
+    <loadProfile>example.perfload</loadProfile>
+    <xi:include href="testJars.xml" />
+</testplan>
+----
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<testJars>
+    <testJar>driver-example-1.0.0-SNAPSHOT.jar</testJar>
+    <testJar>my-special-third-party-dependency.jar</testJar>
+</testJars>
+----
+

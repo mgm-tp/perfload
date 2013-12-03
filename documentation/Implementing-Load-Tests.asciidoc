@@ -1,0 +1,108 @@
+== Implementing Load Tests
+
+A typical perfLoad set up contains several +perfLoad Daemons+ that run on participating client hosts. A daemon acts as a server between the +perfLoad Console+ and the actual +perfLoad Client+ processes. There is always one daemon per client host. Each daemon triggers client processes on the same machine which in turn spawn threads that execute the load test driver.
+
+[discrete]
+==== Definition of Terms
+
+Before getting into the details, the following table defines a few key terms that are necessary to understand perfLoad.
+
+[cols="20m,80a", options="header"]
+|===
+| Term 
+| Definition
+
+| Load Test Driver
+| The piece of software that is executed during a load test. It acts as a client to the system under test. A load test driver can be customized by load test implementers.
+
+| Operation
+| perfLoad usually executes multiple client threads per client process. Each client thread executes the load test driver. The +operation+ is an identifier that tells the driver what is should do at runtime, e. g. execute a certain request flow with certain test data. It is up to the driver implementation to interpret the +operation+.
+
+| Target
+| +operation+ and +target+ always go together. Each client thread is also associated with a +target+. The system under test may contain multiple application servers. Each +target+ stands for one application server. In most cases, there will only be one +target+. In case of a cluster environment, a load balancer is usually used. However, it is very well possible to access multiple application servers directly using multiple +targets+.
+
+| Request Flow 
+| perfLoad Web tests always execute a list of predefined requests. A request flow is an XML file that contains a list of such predefined request templates. Request flows may be fully parameterized. At runtime request templates are transformed into executable requests.
+
+| Load Profile 
+| The load profile, which may be created using perfLoad's +Load Profile Editor+, is a text file which lists all load test driver executions during a test. In fact, it specifies exactly which +operation+ to execute against which +target+ on which +daemon+ by which +process+ at what time relative to the test start.
+
+| Testplan 
+| The testplan is a little XML file which tells perfLoad which load profile to execute, specifies load test driver jar files to distribute to the clients, and allows to set additional properties for the test.
+
+|===
+
+[discrete]
+==== perfLoad Client Internals
+
+perfLoad is not limited to Web load tests. Anything can be implemented. So, in the following, we'll see how perfLoad clients work in general. Later on, we'll look at how Web load tests are implemented.
+
+[discrete]
+===== Load Tests in General
+
+The following sequence diagram shows the basic scenario, which is common to all load tests.
+
+image:sequence-diagram_test-driver.png
+
+The subsequent sections describe the involved classes in detail.
+
+[discrete]
+====== Class +com.mgmtp.perfload.core.client.LtProcess+
+
+The class +com.mgmtp.perfload.core.client.LtProcess+ is the main entry point for a load test client process. It submits +com.mgmtp.perfload.core.client.LtRunner+ implementations to an +ExecutorService+, which is actually responsible for creating test threads. Events are triggered on process start and finish. Implementers can react on these events for initialization and clean-up tasks (e. g. shutdown of connection pools common to all threads).
+
+[discrete]
+====== Class +com.mgmtp.perfload.core.client.util.concurrent.DelayingExecutorService+
+
+This class extends +java.util.concurrent.AbstractExecutorService+. It allows tasks to be executed after a given delay. This is necessary for load profile execution. Internally, it maintains a completion queue, so finished tasks may be taken out of this queue as soon as they are done. This allows for a quick reaction on possible execution errors so that, depending on the type of exception, tests can be aborted early. The size of the thread pool is not limited because the number of threads needed for load profile execution is not available ahead of time. However, idle threads may die when they are not needed anymore. Warnings are logged if tasks are executed too late because of performance problems in the client process due to very high load.
+
+[discrete]
+====== Class +com.mgmtp.perfload.core.client.runner.LtRunner+
+
+The class +com.mgmtp.perfload.core.client.LtRunner+ is associated with an +com.mgmtp.perfload.core.client.driver.LtDriver+ instance. It executes the LtDriver as many times as specified by the loops parameter. Before and after the whole execution as well as before and after each loop iteration, events are triggered. +com.mgmtp.perfload.core.client.LtRunner+ is wrapped into a +Runnable+ instance that is submitted to the executor service. Exceptions thrown during execution are wrapped and re-thrown as +ExecutionException+ when +get()+ is called on the resulting Future. When the above-mentioned completion queue is polled exceptions may be reacted on early and at a central place.
+
+[discrete]
+====== Interface +com.mgmtp.perfload.core.client.driver.LtDriver+
+
++com.mgmtp.perfload.core.client.driver.LtDriver+ is merely an interface. Code that is to be executed during a load test must be implemented in the +execute+ method.
+
+[discrete]
+===== Web Load Tests
+
+Web load tests are naturally more complex. Requests must be executed, responses must be parsed. Certain values may have to be extracted from a previous response in order to replace placeholder tokens for the next request, and so on. In all these areas, projects may have special requirements. Thus, perfLoad provides sensible defaults and offers the necessary extensibility. The diagram below shows the general scenario for Web load tests starting out with +com.mgmtp.perfload.core.client.LtRunner+. The steps before that are the same as for simple load tests.
+
+image:sequence-diagram_web-driver.png
+
+[discrete]
+====== Class +com.mgmtp.perfload.core.web.WebLtDriver+
+
+The class +com.mgmtp.perfload.core.web.WebLtDriver+ is the default +com.mgmtp.perfload.core.client.driver.LtDriver+ implementation for Web load tests. It calls a +com.mgmtp.perfload.core.web.flow.RequestFlowHandler+ which is responsible for any further processing.
+
+[discrete]
+====== Interface +com.mgmtp.perfload.core.web.flow.RequestFlowHandler+
+
+A +com.mgmtp.perfload.core.web.flow.RequestFlowHandler+ processes pre-recorded requests from an XML file. It replaces placeholder tokens in parameterized requests and calls appropriate +RequestHandler+s for processing requests. PerfLoad will provide a default implementation that may easily be extended, e. g. for loading project-specific test data from a database.
+
+[discrete]
+====== Interface +com.mgmtp.perfload.core.web.request.RequestHandler+
+
+A +com.mgmtp.perfload.core.web.request.RequestHandler+ executes requests. PerfLoad supports all HTTP methods. Custom request handlers may be configured.
+
+[discrete]
+====== Interface +com.mgmtp.perfload.core.web.response.ResponseParser+
+
+A +com.mgmtp.perfload.core.web.response.ResponseParser+ basically does what its name implies. Based on regular expressions, the default implementation can validate a response and extract replacement values for placeholder tokens from it.
+
+[discrete]
+==== Next Steps
+
+After this general overview, we can continue delving in deeper:
+
+include::Developing-a-Load-Test-Driver.asciidoc[]
+
+include::Creating-a-Load-Profile.asciidoc[]
+
+include::Creating-a-Testplan.asciidoc[]
+
+include::A-Complete-Example.asciidoc[]
+

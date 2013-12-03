@@ -1,0 +1,46 @@
+== Community
+
+== Need Help?
+
+Join the discussion list:
+
+https://groups.google.com/forum/?hl=de#!forum/perfload-discuss
+
+== Found a Bug?
+
+Use the Github issue tracker:
+
+https://github.com/mgm-tp/perfload/issues
+
+== Want to Get Involved?
+
+We'll be happy to accept pull requests. Here's the list of Github repositories:
+
+* perfLoad Core (Console, client, and Daemon)  
+https://github.com/mgm-tp/perfload-core
+
+* perfMon  
+https://github.com/mgm-tp/perfload-perfmon
+
+* Load Profile Editor  
+https://github.com/mgm-tp/perfload-loadprofiles
+
+* Agent  
+https://github.com/mgm-tp/perfload-agent
+
+* perfAlyzer  
+https://github.com/mgm-tp/perfload-perfalyzer
+
+* Logging Library  
+https://github.com/mgm-tp/perfload-logging
+
+* Supervisor  
+https://github.com/mgm-tp/perfload-supervisor
+
+* Reference Application  
+https://github.com/mgm-tp/perfload-ref-app
+
+* Demo  
+https://github.com/mgm-tp/perfload-demo
+
+

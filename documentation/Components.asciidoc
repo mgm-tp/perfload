@@ -1,0 +1,78 @@
+== Components
+
+perfLoad consists of a number of components which are explained below.
+
+=== Console
+
+[cols="10,.^90"]
+|===
+| image:console.png[Console] 
+| The console controls load test execution. It distributes testplans, load profiles, and driver jars to the daemons and runs the test.
+|===
+
+=== Daemon
+
+[cols="10,.^90"]
+|===
+| image:daemon.png[]
+| A daemon is little server between the console and the clients. A daemon spawns the client processes that execute the load test driver.
+|===
+
+=== Client
+
+[cols="10,.^90"]
+|===
+| image:client.png[]
+| A client process executes the load test driver. Each event in a load profile triggers a new client thread at the specified time executing the operation specified by the load profile event.
+|===
+
+=== perfMon
+
+[cols="10,.^90"]
+|===
+| image:perfMon.png[]
+| The monitoring tool perfMon should be installed on all participating hosts. It captures system metrics, such as CPU, memory, IO, network, etc. and writes them to a file.
+|===
+
+=== Load Profile Editor
+
+[cols="10,.^90"]
+|===
+| image:load_profile_editor.png[]
+| A Swing application for visually creating load profiles.
+|===
+
+=== Agent
+
+[cols="10,.^90"]
+|===
+| image:agent.png[]
+| The perfLoad Agent is a Java agent which instruments the byte code in order to weave in measuring hooks. This solution is much more elegant than AOP because it does no require the development of project-specific aspects. The agent only requires a config file in JSON format in order to define methods that should be instrumented. The agent also captures exceptions that occur in instrumented methods.
+|===
+
+=== perfAlyzer
+
+[cols="10,.^90"]
+|===
+| image:perfAlyzer.png[]
+| Reporting solution that runs out-of-the-box with zero or little extra configuration. Creates full-featured HTML reports including client- and server-side measurings, percentile calculation, response time distribution, system metrics, garbage collection, test history, etc.
+|===
+
+=== Supervisor
+
+[cols="10,.^90"]
+|===
+| image:supervisor.png[]
+a| A Gradle script and a few Groovy classes for controlling everything:
+
+* Clean up environment
+* Start up participating systems if required (e. g. application servers)
+* Start perfMons
+* Start daemons
+* Run test
+* Shut down daemons
+* Shut down perfMons
+* Shut down participating systems
+* Collect test results
+* Run report generation
+|===

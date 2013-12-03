@@ -1,0 +1,34 @@
+== Features
+
+[discrete]
+=== Whitebox Testing Options  
+* Measuring client-side response times  
+* Measuring server-side execution times of specific Java methods using perfLoad Agent  
+* Capturing system metrics, such as CPU, IO, memory, network, etc. using perfMon
+
+[discrete]
+=== Central Control with perfLoad Supervisor  
+* Load test execution control
+* SSH communication with participating hosts
+* Data collection using SCP
+* Hooks for custom scripting, e. g. for starting up or shutting down the system under test.
+
+[discrete]
+=== Load Test Driver Options  
+* Load test driver development in Java with support for JSR 330 dependency injection  
+* Support for all HTTP methods and thus for any kind of HTTP requests (SOAP, REST, AJAX)  
+* Support for custom "request types" (e. g. for calling Java Applet code, calling shell scripts, etc.)  
+* Configurable waiting times between requests
+* Fully parameterizable request flows
+* Tests driven by load profiles making client load exactly follow predefined curves
+* Combination of different request flows into a single load profile
+* Orchestration of load profile executions across multiple client hosts/processes
+* Support for extraction of response headers and details from responses
+* Support for validation of response content and status codes
+
+[discrete]
+=== Visual Creation of Load Profiles with perfLoad Load Profile Editor  
+
+[discrete]
+=== Evaluation and Reporting with perfAlyzer
+* Full-featured reports including client- and server-side measurements, percentile calculation, response time distribution, system metrics, garbage collection, test history, etc.
