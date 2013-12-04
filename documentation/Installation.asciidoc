@@ -83,7 +83,7 @@ In order to activate the agent in your application server, add the following VM-
 
 The file +SupervisorConfig.groovy+ contains settings for the Supervisor that are not specific to load tests. The file is in a format that can be read by Groovy's [ConfigSlurper](http://groovy.codehaus.org/ConfigSlurper). The following table lists all properties for this file. Note that, unlike Java properties, the values are real types, not just strings.
 
-[cols="m,a,m" options="header"]
+[cols="40m,45a,15m" options="header"]
 |===
 | Property 
 | Description 
@@ -127,7 +127,7 @@ The file +SupervisorConfig.groovy+ contains settings for the Supervisor that are
 
 The file +LoadTestConfig.groovy+ contains configurations for all hosts participating in load tests. The file is in a format that can be read by Groovy's [ConfigSlurper](http://groovy.codehaus.org/ConfigSlurper). The following table lists the properties for this file. Note that, unlike Java properties, the values are real types, not just strings. As the configuration is structured as nested maps, the table also shows parent-child relationships.
 
-[cols="m,a,a,m" options="header"]
+[cols="30m,30m,30a,10m" options="header"]
 |===
 | Property 
 | Parent 

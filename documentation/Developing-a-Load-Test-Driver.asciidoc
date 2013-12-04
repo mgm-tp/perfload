@@ -393,7 +393,6 @@ Waiting times are configurable using the following properties.
 | wtm.strategy.betadist.intervalMaxMillis 
 | Applies to +BetaDistWaitingTimeStrategy+ only. 
 | none 
-|
 
 | wtm.strategy.betadist.betaDistParamA 
 | Applies to +BetaDistWaitingTimeStrategy+ only. 
