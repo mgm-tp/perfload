@@ -31,6 +31,7 @@
 						</xs:sequence>
 						<xs:attribute name="type" type="xs:string" use="required" />
 						<xs:attribute name="skip" type="xs:string" use="optional" />
+						<xs:attribute name="validateResponse" type="xs:string" use="optional" />
 						<xs:attribute name="uri" type="xs:string" use="required" />
 						<xs:attribute name="uriAlias" type="xs:string" use="optional" />
 					</xs:complexType>
