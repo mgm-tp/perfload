@@ -140,83 +140,83 @@ The file +LoadTestConfig.groovy+ contains configurations for all hosts participa
 | Root for host configurations. 
 | Map 
 
-| someHostNameOrIp 
+| someHostName&shy;OrIp 
 | hostConfigs 
 | A map representing a specific host configuration. 
 | Map 
 
 | user 
-| someHostNameOrIp 
+| someHostName&shy;OrIp 
 | The username for SSH access. 
 | String 
 
 | password 
-| someHostNameOrIp 
+| someHostName&shy;OrIp 
 | The password for SSH access (optional). 
 | String 
 
 | pemFile 
-| someHostNameOrIp 
+| someHostName&shy;OrIp 
 | The certificate for public key authentication (optional). 
 | String 
 
 | perfLoadHome 
-| someHostNameOrIp 
+| someHostName&shy;OrIp 
 | The base directory for all perfLoad components on this host. 
 | String 
 
 | osfamily 
-| someHostNameOrIp 
+| someHostName&shy;OrIp 
 | The OS family of this host. 
 | String 
 
 | daemonId 
-| someHostNameOrIp 
+| someHostName&shy;OrIp 
 | Optional parameter that be set if this is a client host that runs perfLoad daemons and client processes. Specifies the id of a daemon as configured in the load profile. 
 | int 
 
 | perfmon 
-| someHostNameOrIp 
+| someHostName&shy;OrIp 
 | Optional parameter that must be +true+ if perfMon is installed on this host, which should usually be the case on all participating hosts. 
 | boolean 
 
 | startup 
-| someHostNameOrIp 
+| someHostName&shy;OrIp 
 | A list of SSH commands that should be executed on this host before a load test, e. g. to start up application servers. 
 | List 
 
 | shutdown 
-| someHostNameOrIp 
+| someHostName&shy;OrIp 
 | A list of SSH commands that should be executed on this host after a load test, e. g. to shut down application servers. 
 | List 
 
 | archiving 
-| someHostNameOrIp 
+| someHostName&shy;OrIp 
 | A map of archiving configurations that specify what files perfLoad should zip up and collect after a load test. 
 | Map 
 
-| someArchivingConfigName 
+| someArchiving&shy;ConfigName 
 | archiving 
 | A map representing a specific archiving configuration. 
 | Map 
 
 | dir 
-| someArchivingConfigName 
+| someArchiving&shy;ConfigName 
 | The directory that contains files to be archived. 
 | String 
 
 | files 
-| someArchivingConfigName 
+| someArchiving&shy;ConfigName 
 | A wildcard pattern matching files to be archived. 
 | String 
 
 | zipName 
-| someArchivingConfigName 
+| someArchiving&shy;ConfigName 
 | The name of the zip file to create. 
 | String 
 
 | cleanup 
-| someArchivingConfigName 
+| someArchiving&shy;ConfigName 
 | Specifiey whether the files (including the zip file) should be deleted before a test if they exist. May be left out otherwise. 
 | boolean 
 
