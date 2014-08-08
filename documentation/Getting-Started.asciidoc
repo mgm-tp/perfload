@@ -43,7 +43,7 @@ Initializing...
         *******************************************************************
         *                                                                 *
         *                                                                 *
-        *             Welcome to perfLoad's Supervisor 1.9.0              *
+        *             Welcome to perfLoad's Supervisor 1.9.1              *
         *             (c) 2013, mgm technology partners GmbH              *
         *                                                                 *
         *                                                                 *

@@ -4,14 +4,14 @@ All perfLoad artifacts and distributions are available on Maven Central:
 
 http://search.maven.org/#search|ga|1|g:com.mgmtp.perfload
 
-* http://search.maven.org/remotecontent?filepath=com/mgmtp/perfload/perfload-console/4.6.0/perfload-console-4.6.0-dist.zip[Console 4.6.0]
-* http://search.maven.org/remotecontent?filepath=com/mgmtp/perfload/perfload-client/4.6.0/perfload-client-4.6.0-dist.zip[Client 4.6.0]
-* http://search.maven.org/remotecontent?filepath=com/mgmtp/perfload/perfload-daemon/4.6.0/perfload-daemon-4.6.0-dist.zip[Daemon 4.6.0]
-* http://search.maven.org/remotecontent?filepath=com/mgmtp/perfload/perfload-supervisor/1.8.0/perfload-supervisor-1.8.0-dist.zip[Supervisor 1.8.0]
-* http://search.maven.org/remotecontent?filepath=com/mgmtp/perfload/perfload-agent/1.2.0/perfload-agent-1.2.0.jar[Agent 1.2.0]
-* http://search.maven.org/remotecontent?filepath=com/mgmtp/perfload/perfload-perfmon/2.2/perfload-perfmon-2.2-dist.zip[perfMon 2.2]
-* http://search.maven.org/remotecontent?filepath=com/mgmtp/perfload/perfload-loadprofiles/1.0.3/perfload-loadprofiles-1.0.3-dist.zip[Load Profile Configurator 1.0.3]
-* http://search.maven.org/remotecontent?filepath=com/mgmtp/perfload/perfload-perfalyzer/0.7.0/perfload-perfalyzer-0.7.0-dist.zip[perfAlyzer 0.7.0]
+* http://search.maven.org/remotecontent?filepath=com/mgmtp/perfload/perfload-console/4.8.0-beta-1/perfload-console-4.8.0-beta-1-dist.zip[Console 4.8.0-beta-1]
+* http://search.maven.org/remotecontent?filepath=com/mgmtp/perfload/perfload-client/4.8.0-beta-1/perfload-client-4.8.0-beta-1-dist.zip[Client 4.8.0-beta-1]
+* http://search.maven.org/remotecontent?filepath=com/mgmtp/perfload/perfload-daemon/4.8.0-beta-1/perfload-daemon-4.8.0-beta-1-dist.zip[Daemon 4.8.0-beta-1]
+* http://search.maven.org/remotecontent?filepath=com/mgmtp/perfload/perfload-supervisor/1.9.1/perfload-supervisor-1.9.1-dist.zip[Supervisor 1.9.1]
+* http://search.maven.org/remotecontent?filepath=com/mgmtp/perfload/perfload-agent/1.3.0/perfload-agent-1.3.0.jar[Agent 1.3.0]
+* http://search.maven.org/remotecontent?filepath=com/mgmtp/perfload/perfload-perfmon/2.3.0-beta-1/perfload-perfmon-2.3.0-beta-1-dist.zip[perfMon 2.3.0-beta-1]
+* http://search.maven.org/remotecontent?filepath=com/mgmtp/perfload/perfload-loadprofiles/1.1.0/perfload-loadprofiles-1.1.0-dist.zip[Load Profile Configurator 1.1.0]
+* http://search.maven.org/remotecontent?filepath=com/mgmtp/perfload/perfload-perfalyzer/1.0.0-beta-1/perfload-perfalyzer-1.0.0-beta-1-dist.zip[perfAlyzer 1.0.0-beta-1]
 
 *Maven Dependency for Load Test Driver Development*
 [source,xml]
