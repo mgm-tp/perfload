@@ -1,43 +1,43 @@
 == Installation
 
-The various perfLoad components need to be installed on the participating hosts. All components must be installed under a common directory on each host, which will subsequently be referred to as +PERFLOAD_HOME+. An environment variable with this name is, however, not necessary.
+The various perfLoad components need to be installed on the participating hosts. All components must be installed under a common directory on each host, which will subsequently be referred to as `PERFLOAD_HOME`. An environment variable with this name is, however, not necessary.
 
 '''
 *_A Note up front_*
 
 * _Installing the components always involves unzipping a distribution. It is advisable to unzip the distributions directly on the target systems. This avoids file corruption during SCP transfer of unzipped distributions (e. g. \*.dll and \*.so file in perfMon) and creates execute permissions for shell scripts automatically._
-* _It is always safe to unzip a newer version over an existing installation. All files that require user changes have +.default+ in their names and must be renamed upon installation. So you can always diff your adapted config files with the default ones after an update and make necessary adjustments, if need be._
+* _It is always safe to unzip a newer version over an existing installation. All files that require user changes have `.default` in their names and must be renamed upon installation. So you can always diff your adapted config files with the default ones after an update and make necessary adjustments, if need be._
 
 '''
 
 
 === Installing Daemons and Clients
 
-* Requires Java 7
-* Unzip the perfLoad Client distribution to +PERFLOAD_HOME+ on all client hosts.
-* Unzip the perfLoad Daemon distribution to +PERFLOAD_HOME+ on all client hosts.
-* +JAVA_HOME+ must be set to a **Java 7** (JDK or JRE). A +setenv.cmd+ / +setenv.sh+ may be added to the daemon directory in order to set +JAVA_HOME+. It will be picked up if present.
+* Requires Java 8
+* Unzip the perfLoad Client distribution to `PERFLOAD_HOME` on all client hosts.
+* Unzip the perfLoad Daemon distribution to `PERFLOAD_HOME` on all client hosts.
+* `JAVA_HOME` must be set to a **Java 8** (JDK or JRE). A `setenv.cmd` / `setenv.sh` may be added to the daemon directory in order to set `JAVA_HOME`. It will be picked up if present.
 
 === Installing perfMon
 
 * Requires Java 6
-* Unzip the perfMon distribution to +PERFLOAD_HOME+ on all hosts where you wish to run perfMon during load tests.
-* +JAVA_HOME+ must be set to a **Java 6** or higher (JDK or JRE). A +setenv.cmd+ / +setenv.sh+ may be added to the daemon directory in order to set +JAVA_HOME+. It will be picked up if present.
+* Unzip the perfMon distribution to `PERFLOAD_HOME` on all hosts where you wish to run perfMon during load tests.
+* `JAVA_HOME` must be set to a **Java 6** or higher (JDK or JRE). A `setenv.cmd` / `setenv.sh` may be added to the daemon directory in order to set `JAVA_HOME`. It will be picked up if present.
 
 === Installing the Console
 
-* Requires Java 7
-* Unzip the perfLoad Console distribution to +PERFLOAD_HOME+ on the controller host.
-* +JAVA_HOME+ must be set to a **Java 7** (JDK or JRE). A +setenv.cmd+ / +setenv.sh+ may be added to the daemon directory in order to set +JAVA_HOME+. It will be picked up if present.
-* Copy the driver jar and any additional dependencies to the folder +test-lib+.
-* Copy testplan files to the folder +testplans+.
-* Copy load profile events files to the folder +testplans/loadprofiles+.
+* Requires Java 8
+* Unzip the perfLoad Console distribution to `PERFLOAD_HOME` on the controller host.
+* `JAVA_HOME` must be set to a **Java 8** (JDK or JRE). A `setenv.cmd` / `setenv.sh` may be added to the daemon directory in order to set `JAVA_HOME`. It will be picked up if present.
+* Copy the driver jar and any additional dependencies to the folder `test-lib`.
+* Copy testplan files to the folder `testplans`.
+* Copy load profile events files to the folder `testplans/loadprofiles`.
 
 === Installing the Agent
 
 * Requires Java 6
-* Unzip the perfLoad Agent distribution to +PERFLOAD_HOME+ on the application server hosts.
-* Rename +perfload-agent.default.json+ to +perfload-agent.json+ and edit it as specified below.
+* Unzip the perfLoad Agent distribution to `PERFLOAD_HOME` on the application server hosts.
+* Rename `perfload-agent.default.json` to `perfload-agent.json` and edit it as specified below.
 
 For each method to be measured, add a JSON object to the file, the key being the fully classified class name of the class that contains methods to measure. Each class name JSON object must in turn contain any number of JSON objects for methods to measure, the keys being the method names and the values being lists of JSON arrays with method parameters. Specifying method parameters allows to distinguish between overloaded methods. If an empty list is specified, any, potentially overloaded, method with the name of the key is instrumented.
 
@@ -74,14 +74,14 @@ In order to activate the agent in your application server, add the following VM-
 === Installing the Supervisor
 
 * Requires Java 7
-* Unzip the perfLoad Supervisor distribution to +PERFLOAD_HOME+ on the controller host. Note, the Supervisor must be installed on the same host as the Console.
-* +JAVA_HOME+ must be set to a **Java 7** (JDK or JRE). A +setenv.cmd+ / +setenv.sh+ may be added to the daemon directory in order to set +JAVA_HOME+. It will be picked up if present.
-* Rename all files in directory +conf+ matching the pattern +*.default.*+ by removing ".default" from the file name.
-* Edit the config files in the folder +conf+ as described below.
+* Unzip the perfLoad Supervisor distribution to `PERFLOAD_HOME` on the controller host. Note, the Supervisor must be installed on the same host as the Console.
+* `JAVA_HOME` must be set to a **Java 7** (JDK or JRE). A `setenv.cmd` / `setenv.sh` may be added to the daemon directory in order to set `JAVA_HOME`. It will be picked up if present.
+* Rename all files in directory `conf` matching the pattern `*.default.*` by removing ".default" from the file name.
+* Edit the config files in the folder `conf` as described below.
 
-*Editing +SupervisorConfig.groovy+*
+*Editing `SupervisorConfig.groovy`*
 
-The file +SupervisorConfig.groovy+ contains settings for the Supervisor that are not specific to load tests. The file is in a format that can be read by Groovy's [ConfigSlurper](http://groovy.codehaus.org/ConfigSlurper). The following table lists all properties for this file. Note that, unlike Java properties, the values are real types, not just strings.
+The file `SupervisorConfig.groovy` contains settings for the Supervisor that are not specific to load tests. The file is in a format that can be read by Groovy's [ConfigSlurper](http://groovy.codehaus.org/ConfigSlurper). The following table lists all properties for this file. Note that, unlike Java properties, the values are real types, not just strings.
 
 [cols="40m,45a,15m" options="header"]
 |===
@@ -90,11 +90,11 @@ The file +SupervisorConfig.groovy+ contains settings for the Supervisor that are
 | Type
 
 | loadProfileTestTimeout 
-| The timeout in minutes that the console will wait after the last test thread was started before aborting the test. Set to +0+ for no timeout. 
+| The timeout in minutes that the console will wait after the last test thread was started before aborting the test. Set to `0` for no timeout. 
 | long
 
 | cleanupBeforeTest 
-| Specifies whether the Supervisor should perform a clean-up (e. g. delete old log files) before executing a load test. This should normally be set to +true+ 
+| Specifies whether the Supervisor should perform a clean-up (e. g. delete old log files) before executing a load test. This should normally be set to `true` 
 | boolean
 
 | startServersBeforeTest 
@@ -118,14 +118,14 @@ The file +SupervisorConfig.groovy+ contains settings for the Supervisor that are
 | boolean
 
 | requireTestComment
-| If +true+, the Supervisor prompts for a comment before a test is started. This comment will show up in the report. 
+| If `true`, the Supervisor prompts for a comment before a test is started. This comment will show up in the report. 
 | boolean
 |===
 
 
-*Editing +LoadTestConfig.groovy+*
+*Editing `LoadTestConfig.groovy`*
 
-The file +LoadTestConfig.groovy+ contains configurations for all hosts participating in load tests. The file is in a format that can be read by Groovy's [ConfigSlurper](http://groovy.codehaus.org/ConfigSlurper). The following table lists the properties for this file. Note that, unlike Java properties, the values are real types, not just strings. As the configuration is structured as nested maps, the table also shows parent-child relationships.
+The file `LoadTestConfig.groovy` contains configurations for all hosts participating in load tests. The file is in a format that can be read by Groovy's [ConfigSlurper](http://groovy.codehaus.org/ConfigSlurper). The following table lists the properties for this file. Note that, unlike Java properties, the values are real types, not just strings. As the configuration is structured as nested maps, the table also shows parent-child relationships.
 
 [cols="30m,30m,30a,10m" options="header"]
 |===
@@ -177,7 +177,7 @@ The file +LoadTestConfig.groovy+ contains configurations for all hosts participa
 
 | perfmon 
 | someHostName&shy;OrIp 
-| Optional parameter that must be +true+ if perfMon is installed on this host, which should usually be the case on all participating hosts. 
+| Optional parameter that must be `true` if perfMon is installed on this host, which should usually be the case on all participating hosts. 
 | boolean 
 
 | startup 
@@ -292,7 +292,7 @@ The following example should make this clearer:
 
 *Adding project-specific targets*
 
-The Supervisor can execute project-specific tasks before and after a load test. The file +ProjectTargets.gradle+ must be placed in the Supervisor's installation directory. It must contain the tasks +before+, +after+, and +performSystemCheck+. The latter one can be used to check the availability of the system, e. g. by calling a URL.
+The Supervisor can execute project-specific tasks before and after a load test. The file `ProjectTargets.gradle` must be placed in the Supervisor's installation directory. It must contain the tasks `before`, `after`, and `performSystemCheck`. The latter one can be used to check the availability of the system, e. g. by calling a URL.
 
 [source,groovy]
 ----
@@ -320,6 +320,6 @@ NOTE: An upcoming version of the Supervisor will be able to distribute all compo
 === Installing the Load Profile Editor
 
 * Requires Java 7
-* Unzip the perfLoad Load Profile Editor distribution to +PERFLOAD_HOME+ on the controller host.
-* +JAVA_HOME+ must be set to a **Java 7** (JDK or JRE). A +setenv.cmd+ / +setenv.sh+ may be added to the daemon directory in order to set +JAVA_HOME+. It will be picked up if present.
+* Unzip the perfLoad Load Profile Editor distribution to `PERFLOAD_HOME` on the controller host.
+* `JAVA_HOME` must be set to a **Java 7** (JDK or JRE). A `setenv.cmd` / `setenv.sh` may be added to the daemon directory in order to set `JAVA_HOME`. It will be picked up if present.
 

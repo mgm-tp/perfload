@@ -1,6 +1,6 @@
 === Creating a Load Profile
 
-One of perfLoad's strength is the fact that it uses load profiles. A load profile consist of load profile events. Each events stands for exactly one execution of the load test driver for a specific +operation+ and +target+ at a specific time by a specific client process. The load profile define how the load is distributed across all client process on all participating client hosts. For each execution, a new client thread is spawn at the specified time, i. e. the load is guaranteed to follow the profile independently of the load on the system under test.
+One of perfLoad's strength is the fact that it uses load profiles. A load profile consist of load profile events. Each events stands for exactly one execution of the load test driver for a specific `operation` and `target` at a specific time by a specific client process. The load profile define how the load is distributed across all client process on all participating client hosts. For each execution, a new client thread is spawn at the specified time, i. e. the load is guaranteed to follow the profile independently of the load on the system under test.
 
 Load profiles can be created using perfLoad's Load Profile Editor. The following series of screenshots explains this.
 
@@ -10,13 +10,14 @@ image:lpe1.png[Load Profile Settings]
 
 image:lpe2.png[Load Profile Settings]
 
-Now we can add +load curve assignments+ for one or multiple operations. A load test may contain executions for one operation only, but combination tests executing multiple operations are supported as well.
+Now we can add `load curve assignments` for one or multiple operations. A load test may contain executions for one operation only, but combination tests executing multiple operations are supported as well.
 
-image/lpe3.png[Load Profile Settings]
+image:lpe3.png[Load Profile Settings]
 
-image/lpe4.png[Load Profile Settings]
+image:lpe4.png[Load Profile Settings]
 
-image/lpe5.png[Load Profile Settings]
+image:lpe5.png[Load Profile Settings]
 
-When load profile should now be safe and additionally, it must be exported as events file (extension +.perfload+). The events file must be copied to +console/testplans/loadprofiles+ on the controller host.
+When load profile should now be safe and additionally, it must be exported as events file (extension `.perfload`). The events file must be copied to `console/testplans/loadprofiles` on the controller host.
+
 

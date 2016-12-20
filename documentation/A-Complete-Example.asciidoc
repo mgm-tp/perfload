@@ -57,7 +57,7 @@ public class ExampleModule extends AbstractWebLtModule {
 }
 ----
 
-The module installs +import com.mgmtp.perfload.core.web.config.WebLtModule+ as usual. Plus, it binds a map of test data that is initialized in a provider method and a listener that uses the map in order to select an entry for the current test thread. In this case, the test data is read from a simple text file. In a real-world scenario, a database could be used instead.
+The module installs `import com.mgmtp.perfload.core.web.config.WebLtModule` as usual. Plus, it binds a map of test data that is initialized in a provider method and a listener that uses the map in order to select an entry for the current test thread. In this case, the test data is read from a simple text file. In a real-world scenario, a database could be used instead.
 
 *Qualifying Annotation for the Test Data Map*
 [source,java]
@@ -82,7 +82,7 @@ public @interface TestData {
 }
 ----
 
-The annotation +TestData+ is used in order to further qualify the map. This is necessary if different maps of type +Map<String, String>+ are bound. The annotation must itself be annotated with +@Qualifier+.
+The annotation `TestData` is used in order to further qualify the map. This is necessary if different maps of type `Map<String, String>` are bound. The annotation must itself be annotated with `@Qualifier`.
 
 *Listener for Loading Test Data*
 [source,java]
@@ -131,7 +131,7 @@ public class ExampleListener extends LtListenerAdapter {
 }
 ----
 
-The +ExampleListener+ only implements the method +beforeRequest+. It randomly selects a test data entry and adds replacement values for the placeholder tokens +n+ and +fibn+ to the +PlaceholderContainer+. The class +ExampleListener+ is bound as a +Singleton+ and is annotated accordingly. The +PlaceholderContainer+ is bound by perfLoad and has +ThreadScope+. Thus, it should not be injected directly, but a +Provider<PlaceholderContainer>+ should be injected instead. Otherwise, its scope would effectively be widened to that of a +Singleton+. JSR 330 allows it to inject a provider instead of a direct instance making it possible to always get a correctly scoped object.
+The `ExampleListener` only implements the method `beforeRequest`. It randomly selects a test data entry and adds replacement values for the placeholder tokens `n` and `fibn` to the `PlaceholderContainer`. The class `ExampleListener` is bound as a `Singleton` and is annotated accordingly. The `PlaceholderContainer` is bound by perfLoad and has `ThreadScope`. Thus, it should not be injected directly, but a `Provider<PlaceholderContainer>` should be injected instead. Otherwise, its scope would effectively be widened to that of a `Singleton`. JSR 330 allows it to inject a provider instead of a direct instance making it possible to always get a correctly scoped object.
 
 ==== The Request Flow
 
@@ -152,7 +152,7 @@ The +ExampleListener+ only implements the method +beforeRequest+. It randomly se
 </requestFlow>
 ----
 
-This is a simple request flow that contains a GET and a POST request to the servlet. Upon execution, the placeholders are replaced. The servlet is supposed to return the +n^th^ Fibonacci number as plain text. The expected result is then extracted from the response. Of course, this is a somewhat contrived example. In a real-world scenario, one would e. g. extract some id from the response that must be added as a parameter to the following request.
+This is a simple request flow that contains a GET and a POST request to the servlet. Upon execution, the placeholders are replaced. The servlet is supposed to return the n^th^ Fibonacci number as plain text. The expected result is then extracted from the response. Of course, this is a somewhat contrived example. In a real-world scenario, one would e. g. extract some id from the response that must be added as a parameter to the following request.
 
 ==== The Testplan
 
