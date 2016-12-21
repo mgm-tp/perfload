@@ -20,4 +20,3 @@ image:lpe5.png[Load Profile Settings]
 
 When load profile should now be safe and additionally, it must be exported as events file (extension `.perfload`). The events file must be copied to `console/testplans/loadprofiles` on the controller host.
 
-

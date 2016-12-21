@@ -69,3 +69,4 @@ That's it! Supervisor takes care of everything including startup and shutdown of
 === Examining the Test Results
 
 After successfully completing the test, perfAlyzer is launched creating a report, which is stored under `perfalyzer\output\<testplan>\<timestamp>\05_report\report.html`.
+

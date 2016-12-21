@@ -323,3 +323,4 @@ NOTE: An upcoming version of the Supervisor will be able to distribute all compo
 * Unzip the perfLoad Load Profile Editor distribution to `PERFLOAD_HOME` on the controller host.
 * `JAVA_HOME` must be set to a **Java 7** (JDK or JRE). A `setenv.cmd` / `setenv.sh` may be added to the daemon directory in order to set `JAVA_HOME`. It will be picked up if present.
 
+
