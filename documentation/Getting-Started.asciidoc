@@ -8,7 +8,7 @@ It includes a sample load test driver and several sample testplans which you may
 === Installation
 
 * Make sure `JAVA_HOME` is set to Java 8 (JDK or JRE).
-* Download (link will follow once published) the demo installer and unzip it to some directory of your choice. You will find there a directory named `demo-installer`.
+* Download the http://search.maven.org/remotecontent?filepath=com/mgmtp/perfload/demo/perfload-demo-installer/1.0.1/perfload-demo-installer-1.0.1-dist.zip[demo installer distribution] and unzip it to some directory of your choice. You will find there a directory named `demo-installer`.
 * Open a command prompt in this directory and run `DemoInstaller.cmd` or `./DemoInstaller`, depending on your operating system. The installer will then download and configure all components. You will be prompted for the demo installation directory. You may accept the default or enter a directory of you choice.
 
 [source,bash]
